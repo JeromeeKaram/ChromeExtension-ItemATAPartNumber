@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.35026.233
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChromeExtItemATAPartNumber", "ChromeExtItemATAPartNumber\ChromeExtItemATAPartNumber.csproj", "{144450DC-DEA9-4B95-86C7-17F1404DF2E0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B3B812CF-FC15-4196-88FE-B6C5C2FFF5DE}
+	EndGlobalSection
+EndGlobal
