@@ -1,22 +1,14 @@
-﻿using ChromeExtItemATAPartNumber.Models;
-using HtmlAgilityPack;
-using Newtonsoft.Json;
-using OfficeOpenXml;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Numeric;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.RefAndLookup;
+﻿using HtmlAgilityPack;
+using Microsoft.Ajax.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
-using static OfficeOpenXml.ExcelErrorValue;
-using Match = System.Text.RegularExpressions.Match;
+using System.Windows.Documents;
 
 namespace ChromeExtItemATAPartNumber.Controllers
 {
@@ -116,17 +108,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
                 // Remove .html extension
                 string dmc = Path.GetFileNameWithoutExtension(fileName);
 
-                // Extract SubDMC
-                // Example: PW1100G-C-74-00-00-01A-421A-D
-                // Needed: 74-00-00-01
-
-                string[] parts = dmc.Split('-');
-
-                // Clean the 4th section (remove trailing letters)
-                parts[5] = new string(parts[5].TakeWhile(char.IsDigit).ToArray());
-
-                // Take required parts
-                string subDmc = string.Join("-", parts.Skip(2).Take(4));
+                var subDmc = await GetSubDMCAsync(dmc);
 
                 Console.WriteLine("DMC = " + dmc);
                 Console.WriteLine("SubDMC = " + subDmc);
@@ -141,25 +123,17 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                 var firstMatch = matches.FirstOrDefault();
 
-                var partNumber = "";
+                var partNumbers = new List<MyRow>();
                 if (firstMatch != null)
                 {
                     //var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
                     var partNumberPageURl = $"{folderUrl}{firstMatch}";
-                    partNumber = await FindPartNumberAsync(partNumberPageURl, itemNumber);
+                    partNumbers = await FindPartNumbersAsync(partNumberPageURl, itemNumber);
                 }
-                var myRow = new MyRow();
-                myRow.ItemNumber = itemNumber;
-                myRow.PartNumber = partNumber;
-                myRow.ATACode = subDmc; //TODO
-
-                //var output = $"ATA-{subDmc},PN-{partNumber},itemNumber-{itemNumber}";
 
                 return Json(new
                 {
-                    ata = myRow.ATACode,
-                    pn = myRow.PartNumber,
-                    itemNumber = myRow.ItemNumber
+                    partNumbers
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -168,11 +142,11 @@ namespace ChromeExtItemATAPartNumber.Controllers
             }
         }
 
-        private async Task<string> FindPartNumberAsync(string pageUrl, string itemNumber)
+        private async Task<List<MyRow>> FindPartNumbersAsync(string pageUrl, string itemNumber)
         {
             HttpClient client = new HttpClient();
             string html = await client.GetStringAsync(pageUrl);
-
+            var matchedPartNumbers = new List<MyRow>();
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -196,17 +170,28 @@ namespace ChromeExtItemATAPartNumber.Controllers
                         {
                             string firstText = firstCell?.InnerText.Trim();
 
-                            if (string.Equals(firstText.Trim(), itemNumber.Trim(), StringComparison.OrdinalIgnoreCase))
+                            if (!string.IsNullOrWhiteSpace(firstText))
                             {
-                                // get second column
-                                var thirdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
+                                // Matches:
+                                // 10A, 10B, 10C, 10 AA, 10CC, etc.
+                                string pattern = $"^{Regex.Escape(itemNumber.Trim())}\\s*[A-Za-z]+$";
 
-                                var thirdCellText = thirdCell?.InnerText.Trim();
+                                if (Regex.IsMatch(firstText, pattern, RegexOptions.IgnoreCase))
+                                {
+                                    // get third column
+                                    var thirdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
 
-                                Console.WriteLine("MATCH FOUND: " + firstText);
-                                Console.WriteLine("SECOND COLUMN: " + thirdCellText);
+                                    var thirdCellText = thirdCell?.InnerText.Trim();
 
-                                return thirdCellText; // ✅ return 2nd column value
+                                    Console.WriteLine("MATCH FOUND: " + firstText);
+                                    Console.WriteLine("SECOND COLUMN: " + thirdCellText);
+
+                                    var row1 = new MyRow();
+                                    row1.ATACode = "";
+                                    row1.PartNumber = thirdCellText;
+                                    row1.ItemNumber = firstText;
+                                    matchedPartNumbers.Add(row1);
+                                }
                             }
                         }
                     }
@@ -214,9 +199,9 @@ namespace ChromeExtItemATAPartNumber.Controllers
             }
             else
             {
-                return "";
+                return matchedPartNumbers;
             }
-            return "";
+            return matchedPartNumbers;
         }
 
         public async Task<List<string>> FindDMCStringsAsync(string url)
@@ -254,6 +239,17 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
             // Implementation to find DMC strings in the given URL
             return dmcList;
+        }
+
+        public async Task<string> GetSubDMCAsync(string DMC)
+        {
+            //// Example: PW1100G-C-74-00-00-01A-421A-D
+            //// Needed: C-74-00-00
+            ///
+            var parts = DMC.Split('-');
+
+            // C + first 3 numeric blocks
+            return $"{parts[1]}-{parts[2]}-{parts[3]}-{parts[4]}";
         }
     }
 }

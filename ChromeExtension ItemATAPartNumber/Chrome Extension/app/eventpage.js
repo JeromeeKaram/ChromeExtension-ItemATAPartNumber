@@ -22,6 +22,12 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
             // current page URL
             const pageUrl = tab.url;
 
+	    const fileName = pageUrl.split('/').pop();
+	
+	    const arraySplitByDash = fileName.split('-');
+
+	    const ataCode = arraySplitByDash[2] + arraySplitByDash[3] + arraySplitByDash[4];
+
             // API URL
             const url = new URL(
                 "http://localhost/ChromeExtItemATAPartNumber/ItemATAPartNumber/ATAPNAsync"
@@ -34,22 +40,39 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
                 .then(response => response.json())
                 .then(result => {
 
-                     
+                    console.log(result);
 
-                    let ata = result.ata;
-    		    let pn = result.pn;
-                    let itemNo = result.itemNumber;
+        let tableRows = "";
 
-		    console.log(itemNo);
-    		    alert({
-    html:  `
-            <b>ATA</b>: ${ata}<br>
-            <b>Part Number</b>: ${pn}<br>
-            <b>Item Number</b>: ${itemNo}
-        `
-});
+        result.partNumbers.forEach(row => {
+            tableRows += `
+                <tr>
+                    <td>${row.ItemNumber}</td>
+                    <td>${row.PartNumber}</td>
+                </tr>
+            `;
+        });
 
-                })
+        alert({
+            html: `
+<div style="margin-bottom:10px;">
+            <b>ATA Code:</b> ${ataCode}
+        </div>
+                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Item Number</th>
+                            <th>Part Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${tableRows}
+                    </tbody>
+                </table>
+            `
+        });
+
+    })
                 .catch(err => {
 
                     alert("API Error: " + err.message);
