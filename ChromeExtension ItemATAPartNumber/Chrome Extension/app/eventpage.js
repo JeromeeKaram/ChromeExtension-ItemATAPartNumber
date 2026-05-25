@@ -47,22 +47,26 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
         result.partNumbers.forEach(row => {
             tableRows += `
                 <tr>
-                    <td>${row.ItemNumber}</td>
-                    <td>${row.PartNumber}</td>
+                    <td style="text-align:center;">${row.ItemNumber}</td>
+                    <td style="text-align:center;">${row.PartNumber}</td>
                 </tr>
             `;
         });
 
         alert({
             html: `
-<div style="margin-bottom:10px;">
-            <b>ATA Code:</b> ${ataCode}
-        </div>
+<div style="margin-bottom:5px;">
+        <b>Item No Selected:</b> ${itemNumber}
+    </div>
+
+    <div style="margin-bottom:10px;">
+        <b>ATA Code:</b> ${ataCode}
+    </div>
                 <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; width:100%;">
                     <thead>
                         <tr>
-                            <th>Item Number</th>
-                            <th>Part Number</th>
+                            <th style="text-align:center;">Item Number</th>
+                            <th style="text-align:center;">Part Number</th>
                         </tr>
                     </thead>
                     <tbody>
