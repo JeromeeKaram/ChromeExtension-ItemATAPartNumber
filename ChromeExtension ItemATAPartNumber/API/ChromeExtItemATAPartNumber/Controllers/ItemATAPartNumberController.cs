@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using System.Windows.Documents;
+using System.Xml.Linq;
 
 namespace ChromeExtItemATAPartNumber.Controllers
 {
@@ -123,7 +124,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                 var firstMatch = matches.FirstOrDefault();
 
-                var partNumbers = new List<MyRow>();
+                var partNumbers = new List<EAPD>();
                 if (firstMatch != null)
                 {
                     //var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
@@ -142,11 +143,11 @@ namespace ChromeExtItemATAPartNumber.Controllers
             }
         }
 
-        private async Task<List<MyRow>> FindPartNumbersAsync(string pageUrl, string itemNumber)
+        private async Task<List<EAPD>> FindPartNumbersAsync(string pageUrl, string itemNumber)
         {
             HttpClient client = new HttpClient();
             string html = await client.GetStringAsync(pageUrl);
-            var matchedPartNumbers = new List<MyRow>();
+            var matchedPartNumbers = new List<EAPD>();
             HtmlDocument doc = new HtmlDocument();
             doc.LoadHtml(html);
 
@@ -168,29 +169,123 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                         if (firstCell != null)
                         {
-                            string firstText = firstCell?.InnerText.Trim();
+                            string itemNumberSelected = firstCell?.InnerText.Trim();
 
-                            if (!string.IsNullOrWhiteSpace(firstText))
+                            if (!string.IsNullOrWhiteSpace(itemNumberSelected))
                             {
                                 // Matches:
                                 // 10A, 10B, 10C, 10 AA, 10CC, etc.
                                 string pattern = $"^{Regex.Escape(itemNumber.Trim())}\\s*[A-Za-z]+$";
 
-                                if (Regex.IsMatch(firstText, pattern, RegexOptions.IgnoreCase))
+                                if (Regex.IsMatch(itemNumberSelected, pattern, RegexOptions.IgnoreCase))
                                 {
-                                    // get third column
-                                    var thirdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
+                                    // third column - part number
+                                    var partNumber3rdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
+                                    var partNumber3rdCellText = partNumber3rdCell?.InnerText.Trim();
+                                    partNumber3rdCellText = partNumber3rdCellText.Replace("â€¢", "").Replace("Â", "");
 
-                                    var thirdCellText = thirdCell?.InnerText.Trim();
+                                    // fourth column - full description cell
+                                    //var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
 
-                                    Console.WriteLine("MATCH FOUND: " + firstText);
-                                    Console.WriteLine("SECOND COLUMN: " + thirdCellText);
+                                    //var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
 
-                                    var row1 = new MyRow();
-                                    row1.ATACode = "";
-                                    row1.PartNumber = thirdCellText;
-                                    row1.ItemNumber = firstText;
-                                    matchedPartNumbers.Add(row1);
+                                    string partDescription4thText = "";
+
+                                    //if (partDescription4thCell != null)
+                                    //{
+                                    //    // Clone node so original HTML is not modified
+                                    //    var clone = partDescription4thCell.Clone();
+
+                                    //    // Remove hyperlink tags but keep text
+                                    //    foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
+                                    //    {
+                                    //        link.ParentNode.ReplaceChild(
+                                    //            HtmlTextNode.CreateNode(link.InnerText),
+                                    //            link
+                                    //        );
+                                    //    }
+
+                                    //    var html1 = partDescription4thCell.InnerHtml
+                                    //        .Replace("<br>", "###NEWLINE###")
+                                    //        .Replace("<br/>", "###NEWLINE###")
+                                    //        .Replace("<br />", "###NEWLINE###")
+                                    //        .Replace("&nbsp;", " ")
+                                    //        .Replace("\u00A0", " ");
+
+                                    //    partDescription4thText = HtmlEntity.DeEntitize(HtmlNode.CreateNode("<div>" + html1 + "</div>").InnerText);
+
+                                    //    // Cleanup formatting
+                                    //    partDescription4thText = partDescription4thText
+                                    //        .Replace("POST ", "\nPOST ")
+                                    //        .Replace("PRE ", "\nPRE ")
+                                    //        .Trim();
+                                    //}
+
+                                    //var partDescription4thText = HtmlEntity.DeEntitize(partDescription4thCell?.InnerText.Trim());
+                                    //partDescription4thText = partDescription4thText.Replace("â€¢", "").Replace("Â", "");
+
+                                    //                                    var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
+
+                                    //string partDescription4thText = "";
+
+                                    //if (partDescription4thCell != null)
+                                    //{
+                                    //    var clone = partDescription4thCell.Clone();
+
+                                    //    // Remove hyperlinks but keep their text
+                                    //    foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
+                                    //    {
+                                    //        link.ParentNode.ReplaceChild(
+                                    //            HtmlTextNode.CreateNode(link.InnerText),
+                                    //            link
+                                    //        );
+                                    //    }
+
+                                    //    // Convert BR tags into actual newline characters
+                                    //    foreach (var br in clone.SelectNodes(".//br") ?? Enumerable.Empty<HtmlNode>())
+                                    //    {
+                                    //        br.ParentNode.ReplaceChild(
+                                    //            HtmlTextNode.CreateNode("\n"),
+                                    //            br
+                                    //        );
+                                    //    }
+
+                                    //    partDescription4thText = HtmlEntity.DeEntitize(clone.InnerText)
+                                    //        .Replace("\u00A0", " ")
+                                    //        .Trim();
+                                    //}
+
+                                    var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
+
+                                    string partDescription4thHtml = "";
+
+                                    if (partDescription4thCell != null)
+                                    {
+                                        var clone = partDescription4thCell.Clone();
+
+                                        // Remove hyperlinks but keep their text
+                                        foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
+                                        {
+                                            link.ParentNode.ReplaceChild(
+                                                HtmlTextNode.CreateNode(link.InnerText),
+                                                link
+                                            );
+                                        }
+
+                                        partDescription4thHtml = HtmlEntity.DeEntitize(clone.InnerHtml)
+                                            .Replace("&nbsp;", " ")
+                                            .Replace("\u00A0", " ");
+                                    }
+
+                                    Console.WriteLine("MATCH FOUND: " + itemNumberSelected);
+                                    Console.WriteLine("SECOND COLUMN: " + partNumber3rdCellText);
+
+                                    var eapd = new EAPD();
+                                    eapd.ATACode = "";
+                                    eapd.PartNumber = partNumber3rdCellText;
+                                    eapd.ItemNumber = itemNumberSelected;
+                                    eapd.PartDescription = partDescription4thHtml;
+                                    matchedPartNumbers.Add(eapd);
                                 }
                             }
                         }

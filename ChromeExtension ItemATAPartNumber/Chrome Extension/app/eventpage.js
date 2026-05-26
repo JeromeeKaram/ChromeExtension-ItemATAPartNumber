@@ -1,12 +1,21 @@
-﻿var menuItemForItemNumber = {
-    "id": "selectedItemNumber",
-    "title": "Find ATA Code and PN",
-    "contexts": ["selection"]
-};
-
-chrome.runtime.onInstalled.addListener(() => {
+﻿chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.removeAll(() => { 
-        chrome.contextMenus.create(menuItemForItemNumber);
+
+// Parent menu (this becomes the “extension name group”)
+        chrome.contextMenus.create({
+            id: "rootMenu",
+            title: "Chrome Extension - EIPD",
+            contexts: ["all"]
+        });
+
+        // Child menu (your actual action)
+        chrome.contextMenus.create({
+            id: "selectedItemNumber",
+            parentId: "rootMenu",
+            title: "Find ATA Code && Part Number",
+            contexts: ["selection"]
+        });        
+
     });
 });
 
@@ -44,14 +53,30 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
 
         let tableRows = "";
 
-        result.partNumbers.forEach(row => {
+if (result.partNumbers && result.partNumbers.length > 0)
+{
+result.partNumbers.forEach(row => {
             tableRows += `
                 <tr>
                     <td style="text-align:center;">${row.ItemNumber}</td>
                     <td style="text-align:center;">${row.PartNumber}</td>
+                    <td style="text-align:center;">${row.PartDescription}</td>
                 </tr>
             `;
         });
+}
+else
+{
+tableRows = `
+                <tr>
+                    <td colspan="3" style="text-align:center; color:red;">
+                        Part Numbers Not Found
+                    </td>
+                </tr>
+            `;
+}
+
+        
 
         alert({
             html: `
@@ -67,6 +92,7 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
                         <tr>
                             <th style="text-align:center;">Item Number</th>
                             <th style="text-align:center;">Part Number</th>
+                            <th style="text-align:center;">Part Description</th>
                         </tr>
                     </thead>
                     <tbody>

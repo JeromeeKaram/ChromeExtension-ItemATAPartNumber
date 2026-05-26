@@ -5,10 +5,11 @@ using System.Web;
 
 namespace ChromeExtItemATAPartNumber
 {
-    public class MyRow
+    public class EAPD
     {
         public string ItemNumber;
         public string PartNumber;
+        public string PartDescription;
         public string ATACode;
     }
 }

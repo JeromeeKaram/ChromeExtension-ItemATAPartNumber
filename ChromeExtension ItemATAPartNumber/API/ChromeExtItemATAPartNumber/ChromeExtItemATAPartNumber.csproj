@@ -138,7 +138,7 @@
     </Compile>
     <Compile Include="Models\NetworkConnection.cs" />
     <Compile Include="Models\Utility.cs" />
-    <Compile Include="MyRow.cs" />
+    <Compile Include="EAPD.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
