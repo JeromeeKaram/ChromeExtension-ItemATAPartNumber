@@ -184,76 +184,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
                                     var partNumber3rdCellText = partNumber3rdCell?.InnerText.Trim();
                                     partNumber3rdCellText = partNumber3rdCellText.Replace("â€¢", "").Replace("Â", "");
 
-                                    // fourth column - full description cell
-                                    //var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
-
-                                    //var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
-
                                     string partDescription4thText = "";
-
-                                    //if (partDescription4thCell != null)
-                                    //{
-                                    //    // Clone node so original HTML is not modified
-                                    //    var clone = partDescription4thCell.Clone();
-
-                                    //    // Remove hyperlink tags but keep text
-                                    //    foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
-                                    //    {
-                                    //        link.ParentNode.ReplaceChild(
-                                    //            HtmlTextNode.CreateNode(link.InnerText),
-                                    //            link
-                                    //        );
-                                    //    }
-
-                                    //    var html1 = partDescription4thCell.InnerHtml
-                                    //        .Replace("<br>", "###NEWLINE###")
-                                    //        .Replace("<br/>", "###NEWLINE###")
-                                    //        .Replace("<br />", "###NEWLINE###")
-                                    //        .Replace("&nbsp;", " ")
-                                    //        .Replace("\u00A0", " ");
-
-                                    //    partDescription4thText = HtmlEntity.DeEntitize(HtmlNode.CreateNode("<div>" + html1 + "</div>").InnerText);
-
-                                    //    // Cleanup formatting
-                                    //    partDescription4thText = partDescription4thText
-                                    //        .Replace("POST ", "\nPOST ")
-                                    //        .Replace("PRE ", "\nPRE ")
-                                    //        .Trim();
-                                    //}
-
-                                    //var partDescription4thText = HtmlEntity.DeEntitize(partDescription4thCell?.InnerText.Trim());
-                                    //partDescription4thText = partDescription4thText.Replace("â€¢", "").Replace("Â", "");
-
-                                    //                                    var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
-
-                                    //string partDescription4thText = "";
-
-                                    //if (partDescription4thCell != null)
-                                    //{
-                                    //    var clone = partDescription4thCell.Clone();
-
-                                    //    // Remove hyperlinks but keep their text
-                                    //    foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
-                                    //    {
-                                    //        link.ParentNode.ReplaceChild(
-                                    //            HtmlTextNode.CreateNode(link.InnerText),
-                                    //            link
-                                    //        );
-                                    //    }
-
-                                    //    // Convert BR tags into actual newline characters
-                                    //    foreach (var br in clone.SelectNodes(".//br") ?? Enumerable.Empty<HtmlNode>())
-                                    //    {
-                                    //        br.ParentNode.ReplaceChild(
-                                    //            HtmlTextNode.CreateNode("\n"),
-                                    //            br
-                                    //        );
-                                    //    }
-
-                                    //    partDescription4thText = HtmlEntity.DeEntitize(clone.InnerText)
-                                    //        .Replace("\u00A0", " ")
-                                    //        .Trim();
-                                    //}
 
                                     var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
 
@@ -272,9 +203,17 @@ namespace ChromeExtItemATAPartNumber.Controllers
                                             );
                                         }
 
+                                        // ✅ PUT IT HERE (before InnerHtml extraction)
+                                        var indentureNode = clone.SelectSingleNode(".//span[contains(@class,'indenturePartCell')]");
+                                        if (indentureNode != null)
+                                        {
+                                            indentureNode.Remove();
+                                        }
+
                                         partDescription4thHtml = HtmlEntity.DeEntitize(clone.InnerHtml)
-                                            .Replace("&nbsp;", " ")
-                                            .Replace("\u00A0", " ");
+                                                                    .Replace("&nbsp;", " ")
+                                                                    .Replace("\u00A0", " ")
+                                                                    .Replace("Â", " ");
                                     }
 
                                     Console.WriteLine("MATCH FOUND: " + itemNumberSelected);
