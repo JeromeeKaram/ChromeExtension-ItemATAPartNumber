@@ -58,9 +58,10 @@ if (result.partNumbers && result.partNumbers.length > 0)
 result.partNumbers.forEach(row => {
             tableRows += `
                 <tr>
-                    <td style="text-align:center;">${row.ItemNumber}</td>
+                    <td style="text-align:center;font-weight:700; color:#000;">${row.ItemNumber}</td>
                     <td style="text-align:center;">${row.PartNumber}</td>
-                    <td style="text-align:center;">${row.PartDescription}</td>
+                    <td>${row.PartDescription}</td>
+		            <td>${row.Quantity}</td>
                 </tr>
             `;
         });
@@ -69,7 +70,7 @@ else
 {
 tableRows = `
                 <tr>
-                    <td colspan="3" style="text-align:center; color:red;">
+                    <td colspan="4" style="text-align:center; color:red;">
                         Part Numbers Not Found
                     </td>
                 </tr>
@@ -79,28 +80,100 @@ tableRows = `
         
 
         alert({
-            html: `
-<div style="margin-bottom:5px;">
-        <b>Item No Selected:</b> ${itemNumber}
-    </div>
+    html: `
+<style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        margin: 10px;
+        background: #f7f7f7;
+        color: #333;
+    }
 
-    <div style="margin-bottom:10px;">
-        <b>ATA Code:</b> ${ataCode}
-    </div>
-                <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse; width:100%;">
-                    <thead>
-                        <tr>
-                            <th style="text-align:center;">Item Number</th>
-                            <th style="text-align:center;">Part Number</th>
-                            <th style="text-align:center;">Part Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows}
-                    </tbody>
-                </table>
-            `
-        });
+    .info {
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .info b {
+        color: #111;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        font-size: 13px;
+    }
+
+    thead {
+        background: #2f5bea;
+        color: white;
+    }
+
+    th {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+}
+
+td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+    tbody tr:hover {
+        background: #f1f6ff;
+    }
+
+    .not-found {
+        color: #d9534f;
+        font-weight: bold;
+        padding: 12px;
+    }
+</style>
+
+<div class="info">
+    <b>Item Selected:</b> ${itemNumber}
+</div>
+
+<div class="info">
+    <b>ATA Code:</b> ${ataCode}
+</div>
+
+<div style="text-align:center; margin-bottom:15px;">
+    <img
+        src="${result.base64Image}"
+        alt="Diagram"
+        style="
+            max-width:100%;
+            max-height:300px;
+            border:1px solid #ccc;
+            border-radius:6px;
+            background:white;
+        "
+    />
+</div>
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Item Number</th>
+            <th>Part Number</th>
+            <th>Part Description</th>
+	        <th>Quantity</th>
+        </tr>
+    </thead>
+    <tbody>
+        ${tableRows}
+    </tbody>
+</table>
+`
+});
 
     })
                 .catch(err => {

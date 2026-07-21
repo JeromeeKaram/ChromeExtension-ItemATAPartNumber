@@ -97,6 +97,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
         {
             try
             {
+                //PW1100G-C-72-00-53-03A-720A-B
                 //string url = url1;
                 //string url = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-C-74-00-00-01A-421A-D.html";
 
@@ -125,16 +126,21 @@ namespace ChromeExtItemATAPartNumber.Controllers
                 var firstMatch = matches.FirstOrDefault();
 
                 var partNumbers = new List<EAPD>();
+                var base64Image = "";
+
                 if (firstMatch != null)
                 {
                     //var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
                     var partNumberPageURl = $"{folderUrl}{firstMatch}";
-                    partNumbers = await FindPartNumbersAsync(partNumberPageURl, itemNumber);
+                    //partNumbers = await FindPartNumbersByNumberAsync(partNumberPageURl, itemNumber);
+                    partNumbers = await FindPartNumbersByNameAsync(partNumberPageURl, itemNumber);
+                    base64Image = await GetBase64ImageString(partNumberPageURl);
                 }
 
                 return Json(new
                 {
-                    partNumbers
+                    partNumbers,
+                    base64Image
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -143,7 +149,44 @@ namespace ChromeExtItemATAPartNumber.Controllers
             }
         }
 
-        private async Task<List<EAPD>> FindPartNumbersAsync(string pageUrl, string itemNumber)
+        private async Task<string> GetBase64ImageString(string eipdUrl)
+        {
+            var client = new HttpClient();
+            var html = await client.GetStringAsync(eipdUrl);
+            var doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            var allImages = doc.DocumentNode.SelectNodes("//img");
+            var imagesUrls = new List<string>();
+
+            foreach (var img in allImages ?? Enumerable.Empty<HtmlNode>())
+            {
+                var src = img.GetAttributeValue("src", "");
+                imagesUrls.Add(src);
+            }
+
+            if (imagesUrls.Count > 1)
+            {
+                var imageUrl = new Uri(new Uri(eipdUrl), imagesUrls[1]).AbsoluteUri;
+
+                var response = await client.GetAsync(imageUrl);
+
+                response.EnsureSuccessStatusCode();
+
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var contentType = response.Content.Headers.ContentType?.MediaType;
+
+                //var bytes = await client.GetByteArrayAsync(imageUrl);
+                //var contentType = response.Content.Headers.ContentType?.MediaType;
+                return $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
+
+
+            }
+
+            return "";
+        }
+
+        private async Task<List<EAPD>> FindPartNumbersByNumberAsync(string pageUrl, string itemNumber)
         {
             HttpClient client = new HttpClient();
             string html = await client.GetStringAsync(pageUrl);
@@ -224,6 +267,118 @@ namespace ChromeExtItemATAPartNumber.Controllers
                                     eapd.PartNumber = partNumber3rdCellText;
                                     eapd.ItemNumber = itemNumberSelected;
                                     eapd.PartDescription = partDescription4thHtml;
+                                    matchedPartNumbers.Add(eapd);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                return matchedPartNumbers;
+            }
+            return matchedPartNumbers;
+        }
+
+        private async Task<List<EAPD>> FindPartNumbersByNameAsync(string pageUrl, string itemName)
+        {
+
+            //Remove s||S from itemName if its at the last character in the word
+
+            if (itemName.EndsWith("s", StringComparison.OrdinalIgnoreCase))
+            {
+                int index = Math.Max(itemName.LastIndexOf('s'), itemName.LastIndexOf('S'));
+                itemName = itemName.Remove(index, 1);
+            }
+
+            //
+
+            HttpClient client = new HttpClient();
+            string html = await client.GetStringAsync(pageUrl);
+            var matchedPartNumbers = new List<EAPD>();
+            HtmlDocument doc = new HtmlDocument();
+            doc.LoadHtml(html);
+
+            // Select table by class (all 4 class names included)
+            var table = doc.DocumentNode.SelectSingleNode(
+                "//table[contains(@class,'ipcTable') and contains(@class,'rowHoverIncludeApplic') and contains(@class,'setFixedHeaderEnabled')]"
+            );
+
+            if (table != null)
+            {
+                var rows = table.SelectNodes(".//tr");
+
+                if (rows != null)
+                {
+                    foreach (var row in rows)
+                    {
+                        // 3rd column
+
+                        var firstCell = row.SelectSingleNode("./td[1]/span[last()]");
+                        //var secondCell = row.SelectSingleNode("./td[2]/span[last()]");
+                        var thirdCell = row.SelectSingleNode("./td[3]/span[last()]");
+
+                        if (thirdCell != null)
+                        {
+                            string thirdCellText = thirdCell?.InnerText.Trim();
+
+                            if (!string.IsNullOrWhiteSpace(thirdCellText))
+                            {
+                                // Matches:
+                                // 10A, 10B, 10C, 10 AA, 10CC, etc.
+                                //string pattern = $"^{Regex.Escape(itemName.Trim())}\\s*[A-Za-z]+$";
+
+                                if (thirdCellText.StartsWith(itemName, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // third column - part number
+                                    var partNumber3rdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
+                                    var partNumber3rdCellText = partNumber3rdCell?.InnerText.Trim();
+                                    partNumber3rdCellText = partNumber3rdCellText.Replace("â€¢", "").Replace("Â", "");
+
+                                    string partDescription4thText = "";
+
+                                    var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
+
+                                    string partDescription4thHtml = "";
+
+                                    if (partDescription4thCell != null)
+                                    {
+                                        var clone = partDescription4thCell.Clone();
+
+                                        // Remove hyperlinks but keep their text
+                                        foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
+                                        {
+                                            link.ParentNode.ReplaceChild(
+                                                HtmlTextNode.CreateNode(link.InnerText),
+                                                link
+                                            );
+                                        }
+
+                                        // ✅ PUT IT HERE (before InnerHtml extraction)
+                                        var indentureNode = clone.SelectSingleNode(".//span[contains(@class,'indenturePartCell')]");
+                                        if (indentureNode != null)
+                                        {
+                                            indentureNode.Remove();
+                                        }
+
+                                        partDescription4thHtml = HtmlEntity.DeEntitize(clone.InnerHtml)
+                                                                    .Replace("&nbsp;", " ")
+                                                                    .Replace("\u00A0", " ")
+                                                                    .Replace("Â", " ");
+                                    }
+
+                                    var partQuantity5thCell = row.SelectSingleNode("./td[5]/span[last()]");
+
+                                    Console.WriteLine("MATCH FOUND: " + thirdCellText);
+                                    Console.WriteLine("SECOND COLUMN: " + partNumber3rdCellText);
+
+                                    var eapd = new EAPD();
+                                    eapd.ATACode = "";
+                                    eapd.PartNumber = partNumber3rdCellText;
+                                    eapd.ItemNumber = firstCell?.InnerText.Trim();
+                                    eapd.PartDescription = partDescription4thHtml;
+                                    eapd.Quantity = partQuantity5thCell.InnerText.Trim();
                                     matchedPartNumbers.Add(eapd);
                                 }
                             }
