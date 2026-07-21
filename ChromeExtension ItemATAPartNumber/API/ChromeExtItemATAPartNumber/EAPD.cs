@@ -11,5 +11,6 @@ namespace ChromeExtItemATAPartNumber
         public string PartNumber;
         public string PartDescription;
         public string ATACode;
+        public string Quantity;
     }
 }
