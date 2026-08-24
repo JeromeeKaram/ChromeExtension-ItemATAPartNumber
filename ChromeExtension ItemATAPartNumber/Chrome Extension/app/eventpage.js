@@ -137,10 +137,6 @@ td {
     }
 </style>
 
-<div  class="info">
-<b>EIPD Links - ${result.eipdLinksCount}</b>
-</div>
-
 <div class="info">
     <b>Item Selected:</b> ${itemNumber}
 </div>
