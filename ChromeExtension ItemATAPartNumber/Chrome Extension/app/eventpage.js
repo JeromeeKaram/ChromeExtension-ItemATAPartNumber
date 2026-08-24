@@ -1,4 +1,5 @@
-﻿chrome.runtime.onInstalled.addListener(() => {
+﻿console.log("eventPage.js loaded");
+chrome.runtime.onInstalled.addListener(() => {
     chrome.contextMenus.removeAll(() => { 
 
 // Parent menu (this becomes the “extension name group”)
@@ -135,6 +136,10 @@ td {
         padding: 12px;
     }
 </style>
+
+<div  class="info">
+<b>EIPD Links - ${result.eipdLinksCount}</b>
+</div>
 
 <div class="info">
     <b>Item Selected:</b> ${itemNumber}
