@@ -123,6 +123,8 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                 var matches = dmcStrings.Where(x => x.Contains(subDmc)).ToList();
 
+                var eipdLinksCount = matches.Count;
+
                 var firstMatch = matches.FirstOrDefault();
 
                 var partNumbers = new List<EAPD>();
@@ -137,10 +139,12 @@ namespace ChromeExtItemATAPartNumber.Controllers
                     base64Image = await GetBase64ImageString(partNumberPageURl);
                 }
 
+
                 return Json(new
                 {
                     partNumbers,
-                    base64Image
+                    base64Image,
+                    eipdLinksCount
                 }, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
@@ -311,17 +315,40 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                 if (rows != null)
                 {
-                    foreach (var row in rows)
+                    // Find header row
+                    var headerRow = rows.FirstOrDefault(r => r.SelectNodes("./th") != null);
+
+                    int descriptionColumn = -1;
+                    int quantityColumn = -1;
+
+                    if (headerRow != null)
+                    {
+                        var headers = headerRow.SelectNodes("./th");
+
+                        for (int i = 0; i < headers.Count; i++)
+                        {
+                            string headerText = HtmlEntity.DeEntitize(headers[i].InnerText).Trim();
+
+                            if (headerText.Equals("Description", StringComparison.OrdinalIgnoreCase))
+                                descriptionColumn = i + 1;          // XPath is 1-based
+
+                            if (headerText.Equals("UPA", StringComparison.OrdinalIgnoreCase))
+                                quantityColumn = i + 1;          // XPath is 1-based
+                        }
+                    }
+
+                    foreach (var row in rows.Where(r => r.SelectNodes("./td") != null))
                     {
                         // 3rd column
-
                         var firstCell = row.SelectSingleNode("./td[1]/span[last()]");
                         //var secondCell = row.SelectSingleNode("./td[2]/span[last()]");
-                        var thirdCell = row.SelectSingleNode("./td[3]/span[last()]");
+                        var thirdCell = row.SelectSingleNode($"./td[{descriptionColumn}]/span[last()]");
+
+                        var thirdCellAll = row.SelectSingleNode($"./td[{descriptionColumn}]");
 
                         if (thirdCell != null)
                         {
-                            string thirdCellText = thirdCell?.InnerText.Trim();
+                            string thirdCellText = thirdCellAll?.InnerText.Trim();
 
                             if (!string.IsNullOrWhiteSpace(thirdCellText))
                             {
@@ -329,7 +356,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
                                 // 10A, 10B, 10C, 10 AA, 10CC, etc.
                                 //string pattern = $"^{Regex.Escape(itemName.Trim())}\\s*[A-Za-z]+$";
 
-                                if (thirdCellText.StartsWith(itemName, StringComparison.OrdinalIgnoreCase))
+                                if (thirdCellText.IndexOf(itemName, StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
                                     // third column - part number
                                     var partNumber3rdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
@@ -368,7 +395,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
                                                                     .Replace("Â", " ");
                                     }
 
-                                    var partQuantity5thCell = row.SelectSingleNode("./td[5]/span[last()]");
+                                    var partQuantity5thCell = row.SelectSingleNode($"./td[{quantityColumn}]/span[last()]");
 
                                     Console.WriteLine("MATCH FOUND: " + thirdCellText);
                                     Console.WriteLine("SECOND COLUMN: " + partNumber3rdCellText);
