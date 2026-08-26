@@ -15,6 +15,8 @@ namespace ChromeExtItemATAPartNumber.Controllers
 {
     public class ItemATAPartNumberController : Controller
     {
+        public const string EIPD_PAGE = "PW1000G-77445-16995-00.html";
+
         // GET: ModuleID
         public ActionResult Index()
         {
@@ -101,8 +103,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
                 //string url = url1;
                 //string url = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-C-74-00-00-01A-421A-D.html";
 
-                string folderUrl = pageUrl.Substring(0, pageUrl.LastIndexOf('/') + 1);
-                //http://127.0.0.1:8000/PW1000G-77445-19453-00/
+                string folderUrl = pageUrl.Substring(0, pageUrl.LastIndexOf('/') + 1); //http://127.0.0.1:8000/PW1000G-77445-19453-00/
 
                 // Get filename from URL
                 string fileName = Path.GetFileName(new Uri(pageUrl).AbsolutePath);
@@ -110,47 +111,94 @@ namespace ChromeExtItemATAPartNumber.Controllers
                 // Remove .html extension
                 string dmc = Path.GetFileNameWithoutExtension(fileName);
 
-                var subDmc = await GetSubDMCAsync(dmc);
+                var eipdUrl = $"{folderUrl}/{EIPD_PAGE}"; //var eipdUrl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1000G-77445-16995-00.html";
 
-                Console.WriteLine("DMC = " + dmc);
-                Console.WriteLine("SubDMC = " + subDmc);
-
-                var eipdHtmlPage = "PW1000G-77445-16995-00.html";
-
-                var eipdUrl = $"{folderUrl}/{eipdHtmlPage}";
-                //var eipdUrl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1000G-77445-16995-00.html";
                 var dmcStrings = await FindDMCStringsAsync(eipdUrl);
 
-                var matches = dmcStrings.Where(x => x.Contains(subDmc)).ToList();
+                //input  = PW1100G-B-72-21-00-05A-941A-D
+                //output = B-72-21-00-05A
+                var match = Regex.Match(dmc, @"([A-Za-z]-\d{2}-\d{2}-\d{2}-\d{2}[A-Za-z])");
 
-                var eipdLinksCount = matches.Count;
-
-                var firstMatch = matches.FirstOrDefault();
-
-                var partNumbers = new List<EAPD>();
-                var base64Image = "";
-
-                if (firstMatch != null)
+                if (match.Success)
                 {
-                    //var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
-                    var partNumberPageURl = $"{folderUrl}{firstMatch}";
-                    //partNumbers = await FindPartNumbersByNumberAsync(partNumberPageURl, itemNumber);
-                    partNumbers = await FindPartNumbersByNameAsync(partNumberPageURl, itemNumber);
-                    base64Image = await GetBase64ImageString(partNumberPageURl);
+                    string value = match.Groups[1].Value;
+
+                    var validDMCs = GetSearchPatterns(value);
+                    //validDMCs = B-72-21-00-05A, B-72-21-00-04A, B-72-21-00-06A, B-72-21-00
+
+                    int eipdLinksCount = 0;
+                    var partNumbers = new List<EAPD>();
+                    var base64Image = "";
+                    var mapped_em_eipd_link = false;
+
+                    foreach (var validDMC in validDMCs)
+                    {
+                        var matches = dmcStrings.Where(x => x.Contains(validDMC)).ToList();
+
+                        if (!matches.Any()) continue;
+
+                        mapped_em_eipd_link = true;
+
+                        eipdLinksCount = matches.Count;
+
+                        var firstMatch = matches.FirstOrDefault();
+
+                        if (firstMatch != null)
+                        {
+                            //var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
+                            var partNumberPageURl = $"{folderUrl}{firstMatch}";
+                            //partNumbers = await FindPartNumbersByNumberAsync(partNumberPageURl, itemNumber);
+                            partNumbers = await FindPartNumbersByNameAsync(partNumberPageURl, itemNumber);
+                            base64Image = await GetBase64ImageString(partNumberPageURl);
+                        }
+
+                        break; // Exit the loop after the first match
+                    }
+
+                    return Json(new
+                    {
+                        mapped_em_eipd_link,
+                        partNumbers,
+                        base64Image,
+                        eipdLinksCount
+                    }, JsonRequestBehavior.AllowGet);
                 }
-
-
-                return Json(new
+                else
                 {
-                    partNumbers,
-                    base64Image,
-                    eipdLinksCount
-                }, JsonRequestBehavior.AllowGet);
+                    return Json(new { error = "DMC pattern not found in the URL." }, JsonRequestBehavior.AllowGet);
+                }
             }
             catch (Exception ex)
             {
                 return Json(new { error = ex.Message }, JsonRequestBehavior.AllowGet);
             }
+        }
+
+        public static List<string> GetSearchPatterns(string input)
+        {
+            var result = new List<string> { input };
+
+            // Capture: prefix + number + suffix
+            var match = Regex.Match(input, @"^(.*-)(\d+)([A-Za-z]+)$");
+
+            if (match.Success)
+            {
+                string prefix = match.Groups[1].Value;
+                int number = int.Parse(match.Groups[2].Value);
+                string suffix = match.Groups[3].Value;
+
+                // Previous
+                if (number > 1)
+                    result.Add($"{prefix}{number - 1:D2}{suffix}");
+
+                // Next
+                result.Add($"{prefix}{number + 1:D2}{suffix}");
+
+                // Base value
+                result.Add(prefix.TrimEnd('-'));
+            }
+
+            return result;
         }
 
         private async Task<string> GetBase64ImageString(string eipdUrl)
