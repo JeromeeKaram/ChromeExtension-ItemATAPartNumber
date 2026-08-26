@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37516.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChromeExtItemATAPartNumber", "API\ChromeExtItemATAPartNumber\ChromeExtItemATAPartNumber.csproj", "{144450DC-DEA9-4B95-86C7-17F1404DF2E0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ChromeExtension", "ChromeExtension", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Chrome Extension", "Chrome Extension\", "{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_51090"
+		Debug.AspNetCompiler.PhysicalPath = "Chrome Extension\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51090\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_51090"
+		Release.AspNetCompiler.PhysicalPath = "Chrome Extension\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51090\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "51090"
+		SlnRelativePath = "Chrome Extension\"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{144450DC-DEA9-4B95-86C7-17F1404DF2E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Release|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DC67710D-EBF1-4F6B-8D06-71FD09875E31}
+	EndGlobalSection
+EndGlobal
