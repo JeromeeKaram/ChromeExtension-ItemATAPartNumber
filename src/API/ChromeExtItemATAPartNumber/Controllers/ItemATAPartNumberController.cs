@@ -136,7 +136,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                         if (!matches.Any()) continue;
 
-                        //mapped_em_eipd_link = true;
+                        mapped_em_eipd_link = true;
 
                         eipdLinksCount = matches.Count;
 
