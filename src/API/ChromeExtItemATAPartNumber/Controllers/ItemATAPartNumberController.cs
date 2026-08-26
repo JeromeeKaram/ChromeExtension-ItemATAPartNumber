@@ -99,9 +99,8 @@ namespace ChromeExtItemATAPartNumber.Controllers
         {
             try
             {
-                //PW1100G-C-72-00-53-03A-720A-B
-                //string url = url1;
-                //string url = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-C-74-00-00-01A-421A-D.html";
+                //http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-72-21-00-02A-530A-B.html (Engine Manual)
+                //http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-72-21-00-02A-941A-D.html (EIPD)
 
                 string folderUrl = pageUrl.Substring(0, pageUrl.LastIndexOf('/') + 1); //http://127.0.0.1:8000/PW1000G-77445-19453-00/
 
@@ -137,7 +136,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                         if (!matches.Any()) continue;
 
-                        mapped_em_eipd_link = true;
+                        //mapped_em_eipd_link = true;
 
                         eipdLinksCount = matches.Count;
 
