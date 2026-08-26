@@ -52,6 +52,25 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
 
                     console.log(result);
 
+                    // Display data only when EM EIPD link is mapped
+    if (!result.mapped_em_eipd_link) {
+        alert({
+            html: `
+                <div style="
+                    font-family: Arial, Helvetica, sans-serif;
+                    padding: 20px;
+                    text-align: center;
+                    color: #d9534f;
+                    font-size: 16px;
+                ">
+                    EIPD link is not mapped for this task.
+                </div>
+            `
+        });
+
+        return;
+    }
+
         let tableRows = "";
 
 if (result.partNumbers && result.partNumbers.length > 0)

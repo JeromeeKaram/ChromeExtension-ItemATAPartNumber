@@ -114,10 +114,10 @@ namespace ChromeExtItemATAPartNumber.Controllers
                 var eipdUrl = $"{folderUrl}/{EIPD_PAGE}"; //var eipdUrl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1000G-77445-16995-00.html";
 
                 var dmcStrings = await FindDMCStringsAsync(eipdUrl);
-
+                
+                var match = Regex.Match(dmc, @"([A-Za-z]-\d{2}-\d{2}-\d{2}-\d{2}[A-Za-z])");
                 //input  = PW1100G-B-72-21-00-05A-941A-D
                 //output = B-72-21-00-05A
-                var match = Regex.Match(dmc, @"([A-Za-z]-\d{2}-\d{2}-\d{2}-\d{2}[A-Za-z])");
 
                 if (match.Success)
                 {
@@ -145,9 +145,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                         if (firstMatch != null)
                         {
-                            //var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
-                            var partNumberPageURl = $"{folderUrl}{firstMatch}";
-                            //partNumbers = await FindPartNumbersByNumberAsync(partNumberPageURl, itemNumber);
+                            var partNumberPageURl = $"{folderUrl}{firstMatch}";//var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
                             partNumbers = await FindPartNumbersByNameAsync(partNumberPageURl, itemNumber);
                             base64Image = await GetBase64ImageString(partNumberPageURl);
                         }
