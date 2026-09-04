@@ -1,8 +1,8 @@
 ﻿console.log("eventPage.js loaded");
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.removeAll(() => { 
+    chrome.contextMenus.removeAll(() => {
 
-// Parent menu (this becomes the “extension name group”)
+        // Parent menu (this becomes the “extension name group”)
         chrome.contextMenus.create({
             id: "rootMenu",
             title: "Chrome Extension - EIPD",
@@ -15,12 +15,12 @@ chrome.runtime.onInstalled.addListener(() => {
             parentId: "rootMenu",
             title: "Find ATA Code && Part Number",
             contexts: ["selection"]
-        });        
+        });
 
     });
 });
 
-chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
+chrome.contextMenus.onClicked.addListener(async function (clickData, tab) {
 
     try {
 
@@ -32,11 +32,22 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
             // current page URL
             const pageUrl = tab.url;
 
-	    const fileName = pageUrl.split('/').pop();
-	
-	    const arraySplitByDash = fileName.split('-');
+            const fileName = pageUrl.split('/').pop();
 
-	    const ataCode = arraySplitByDash[2] + arraySplitByDash[3] + arraySplitByDash[4];
+            const arraySplitByDash = fileName.split('-');
+
+            const ataCode = arraySplitByDash[2] + arraySplitByDash[3] + arraySplitByDash[4];
+
+            const response = await chrome.tabs.sendMessage(
+                tab.id,
+                {
+                    action: "getDmcTitle"
+                }
+            );
+
+            const dmcTitle = response?.dmcTitle || "";
+
+            console.log("DMC Title:", dmcTitle);
 
             // API URL
             const url = new URL(
@@ -45,6 +56,7 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
 
             url.searchParams.append("itemNumber", itemNumber);
             url.searchParams.append("pageUrl", pageUrl);
+            url.searchParams.append("dmcTitle", dmcTitle);
 
             fetch(url)
                 .then(response => response.json())
@@ -53,9 +65,9 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
                     console.log(result);
 
                     // Display data only when EM EIPD link is mapped
-    if (!result.mapped_em_eipd_link) {
-        alert({
-            html: `
+                    if (!result.mapped_em_eipd_link) {
+                        alert({
+                            html: `
                 <div style="
                     font-family: Arial, Helvetica, sans-serif;
                     padding: 20px;
@@ -66,17 +78,16 @@ chrome.contextMenus.onClicked.addListener(function (clickData, tab) {
                     EIPD link is not mapped for this task.
                 </div>
             `
-        });
+                        });
 
-        return;
-    }
+                        return;
+                    }
 
-        let tableRows = "";
+                    let tableRows = "";
 
-if (result.partNumbers && result.partNumbers.length > 0)
-{
-result.partNumbers.forEach(row => {
-            tableRows += `
+                    if (result.partNumbers && result.partNumbers.length > 0) {
+                        result.partNumbers.forEach(row => {
+                            tableRows += `
                 <tr>
                     <td style="text-align:center;font-weight:700; color:#000;">${row.ItemNumber}</td>
                     <td style="text-align:center;">${row.PartNumber}</td>
@@ -84,23 +95,22 @@ result.partNumbers.forEach(row => {
 		            <td>${row.Quantity}</td>
                 </tr>
             `;
-        });
-}
-else
-{
-tableRows = `
+                        });
+                    }
+                    else {
+                        tableRows = `
                 <tr>
                     <td colspan="4" style="text-align:center; color:red;">
                         Part Numbers Not Found
                     </td>
                 </tr>
             `;
-}
+                    }
 
-        
 
-        alert({
-    html: `
+
+                    alert({
+                        html: `
 <style>
     body {
         font-family: Arial, Helvetica, sans-serif;
@@ -193,9 +203,9 @@ td {
     </tbody>
 </table>
 `
-});
+                    });
 
-    })
+                })
                 .catch(err => {
 
                     alert("API Error: " + err.message);
@@ -207,7 +217,7 @@ td {
     catch (e) {
 
         alert("Error " + e);
-
+        console.log(e);
     }
 });
 

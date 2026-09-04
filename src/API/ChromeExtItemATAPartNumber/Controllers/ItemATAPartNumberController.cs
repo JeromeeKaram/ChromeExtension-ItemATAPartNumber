@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using ChromeExtItemATAPartNumber.Models;
+using HtmlAgilityPack;
 using Microsoft.Ajax.Utilities;
 using System;
 using System.Collections.Generic;
@@ -95,7 +96,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
             }
         }
 
-        public async Task<JsonResult> ATAPNAsync(string pageUrl, string itemNumber)
+        public async Task<JsonResult> ATAPNAsync(string pageUrl, string itemNumber, string dmcTitle)
         {
             try
             {
@@ -112,44 +113,53 @@ namespace ChromeExtItemATAPartNumber.Controllers
 
                 var eipdUrl = $"{folderUrl}/{EIPD_PAGE}"; //var eipdUrl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1000G-77445-16995-00.html";
 
-                var dmcStrings = await FindDMCStringsAsync(eipdUrl);
-                
-                var match = Regex.Match(dmc, @"([A-Za-z]-\d{2}-\d{2}-\d{2}-\d{2}[A-Za-z])");
+                var dmcs = await FindDMCStringsAsync(eipdUrl);
+
+                var match = Regex.Match(dmc, @"([A-Za-z]-\d{2}-\d{2}-\d{2})");
                 //input  = PW1100G-B-72-21-00-05A-941A-D
-                //output = B-72-21-00-05A
+                //output = B-72-21-00
 
                 if (match.Success)
                 {
                     string value = match.Groups[1].Value;
 
-                    var validDMCs = GetSearchPatterns(value);
-                    //validDMCs = B-72-21-00-05A, B-72-21-00-04A, B-72-21-00-06A, B-72-21-00
+                    var findAll = dmcs.Where(d => d.DMC.Contains(value)).ToList();
 
-                    int eipdLinksCount = 0;
+                    var dmcTitleWords = dmcTitle
+    .ToLower()
+    .Split(new[] { ' ' })
+    .Where(w => !string.IsNullOrWhiteSpace(w))
+    .ToArray();
+
+                    var bestMatch = findAll
+                        .Select(item => new
+                        {
+                            Item = item,
+                            MatchCount = item.DMCTitle
+                                .ToLower()
+                                .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Count(word => dmcTitleWords.Contains(word))
+                        })
+                        .OrderByDescending(x => x.MatchCount)
+                        .First();
+
                     var partNumbers = new List<EAPD>();
                     var base64Image = "";
                     var mapped_em_eipd_link = false;
 
-                    foreach (var validDMC in validDMCs)
+                    if (bestMatch == null || bestMatch.MatchCount == 0)
                     {
-                        var matches = dmcStrings.Where(x => x.Contains(validDMC)).ToList();
-
-                        if (!matches.Any()) continue;
-
+                        // No meaningful match found
+                        mapped_em_eipd_link = false;
+                    }
+                    else
+                    {
+                        var matchedItem = bestMatch.Item;
                         mapped_em_eipd_link = true;
 
-                        eipdLinksCount = matches.Count;
-
-                        var firstMatch = matches.FirstOrDefault();
-
-                        if (firstMatch != null)
-                        {
-                            var partNumberPageURl = $"{folderUrl}{firstMatch}";//var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
-                            partNumbers = await FindPartNumbersByNameAsync(partNumberPageURl, itemNumber);
-                            base64Image = await GetBase64ImageString(partNumberPageURl);
-                        }
-
-                        break; // Exit the loop after the first match
+                        var partNumberPageURl = $"{folderUrl}{matchedItem.DMC}";//var partNumberPageURl = "http://127.0.0.1:8000/PW1000G-77445-19453-00/PW1100G-B-73-21-64-01A-941A-D.html";
+                        partNumbers = await FindPartNumbersByNameAsync(partNumberPageURl, itemNumber);
+                        base64Image = await GetBase64ImageString(partNumberPageURl);
                     }
 
                     return Json(new
@@ -157,7 +167,6 @@ namespace ChromeExtItemATAPartNumber.Controllers
                         mapped_em_eipd_link,
                         partNumbers,
                         base64Image,
-                        eipdLinksCount
                     }, JsonRequestBehavior.AllowGet);
                 }
                 else
@@ -171,32 +180,32 @@ namespace ChromeExtItemATAPartNumber.Controllers
             }
         }
 
-        public static List<string> GetSearchPatterns(string input)
-        {
-            var result = new List<string> { input };
+        //public static List<string> GetSearchPatterns(string input)
+        //{
+        //    var result = new List<string> { input };
 
-            // Capture: prefix + number + suffix
-            var match = Regex.Match(input, @"^(.*-)(\d+)([A-Za-z]+)$");
+        //    // Capture: prefix + number + suffix
+        //    var match = Regex.Match(input, @"^(.*-)(\d+)([A-Za-z]+)$");
 
-            if (match.Success)
-            {
-                string prefix = match.Groups[1].Value;
-                int number = int.Parse(match.Groups[2].Value);
-                string suffix = match.Groups[3].Value;
+        //    if (match.Success)
+        //    {
+        //        string prefix = match.Groups[1].Value;
+        //        int number = int.Parse(match.Groups[2].Value);
+        //        string suffix = match.Groups[3].Value;
 
-                // Previous
-                if (number > 1)
-                    result.Add($"{prefix}{number - 1:D2}{suffix}");
+        //        // Previous
+        //        if (number > 1)
+        //            result.Add($"{prefix}{number - 1:D2}{suffix}");
 
-                // Next
-                result.Add($"{prefix}{number + 1:D2}{suffix}");
+        //        // Next
+        //        result.Add($"{prefix}{number + 1:D2}{suffix}");
 
-                // Base value
-                result.Add(prefix.TrimEnd('-'));
-            }
+        //        // Base value
+        //        result.Add(prefix.TrimEnd('-'));
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
 
         private async Task<string> GetBase64ImageString(string eipdUrl)
         {
@@ -235,100 +244,100 @@ namespace ChromeExtItemATAPartNumber.Controllers
             return "";
         }
 
-        private async Task<List<EAPD>> FindPartNumbersByNumberAsync(string pageUrl, string itemNumber)
-        {
-            HttpClient client = new HttpClient();
-            string html = await client.GetStringAsync(pageUrl);
-            var matchedPartNumbers = new List<EAPD>();
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(html);
+        //private async Task<List<EAPD>> FindPartNumbersByNumberAsync(string pageUrl, string itemNumber)
+        //{
+        //    HttpClient client = new HttpClient();
+        //    string html = await client.GetStringAsync(pageUrl);
+        //    var matchedPartNumbers = new List<EAPD>();
+        //    HtmlDocument doc = new HtmlDocument();
+        //    doc.LoadHtml(html);
 
-            // Select table by class (all 4 class names included)
-            var table = doc.DocumentNode.SelectSingleNode(
-                "//table[contains(@class,'ipcTable') and contains(@class,'rowHoverIncludeApplic') and contains(@class,'setFixedHeaderEnabled')]"
-            );
+        //    // Select table by class (all 4 class names included)
+        //    var table = doc.DocumentNode.SelectSingleNode(
+        //        "//table[contains(@class,'ipcTable') and contains(@class,'rowHoverIncludeApplic') and contains(@class,'setFixedHeaderEnabled')]"
+        //    );
 
-            if (table != null)
-            {
-                var rows = table.SelectNodes(".//tr");
+        //    if (table != null)
+        //    {
+        //        var rows = table.SelectNodes(".//tr");
 
-                if (rows != null)
-                {
-                    foreach (var row in rows)
-                    {
-                        // first column
-                        var firstCell = row.SelectSingleNode("./td[1]/span[last()]");
+        //        if (rows != null)
+        //        {
+        //            foreach (var row in rows)
+        //            {
+        //                // first column
+        //                var firstCell = row.SelectSingleNode("./td[1]/span[last()]");
 
-                        if (firstCell != null)
-                        {
-                            string itemNumberSelected = firstCell?.InnerText.Trim();
+        //                if (firstCell != null)
+        //                {
+        //                    string itemNumberSelected = firstCell?.InnerText.Trim();
 
-                            if (!string.IsNullOrWhiteSpace(itemNumberSelected))
-                            {
-                                // Matches:
-                                // 10A, 10B, 10C, 10 AA, 10CC, etc.
-                                string pattern = $"^{Regex.Escape(itemNumber.Trim())}\\s*[A-Za-z]+$";
+        //                    if (!string.IsNullOrWhiteSpace(itemNumberSelected))
+        //                    {
+        //                        // Matches:
+        //                        // 10A, 10B, 10C, 10 AA, 10CC, etc.
+        //                        string pattern = $"^{Regex.Escape(itemNumber.Trim())}\\s*[A-Za-z]+$";
 
-                                if (Regex.IsMatch(itemNumberSelected, pattern, RegexOptions.IgnoreCase))
-                                {
-                                    // third column - part number
-                                    var partNumber3rdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
-                                    var partNumber3rdCellText = partNumber3rdCell?.InnerText.Trim();
-                                    partNumber3rdCellText = partNumber3rdCellText.Replace("â€¢", "").Replace("Â", "");
+        //                        if (Regex.IsMatch(itemNumberSelected, pattern, RegexOptions.IgnoreCase))
+        //                        {
+        //                            // third column - part number
+        //                            var partNumber3rdCell = row.SelectSingleNode("./td[contains(@class,'comPart')]//a");
+        //                            var partNumber3rdCellText = partNumber3rdCell?.InnerText.Trim();
+        //                            partNumber3rdCellText = partNumber3rdCellText.Replace("â€¢", "").Replace("Â", "");
 
-                                    string partDescription4thText = "";
+        //                            string partDescription4thText = "";
 
-                                    var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
+        //                            var partDescription4thCell = row.SelectSingleNode("./td[contains(@class,'comDesc')]");
 
-                                    string partDescription4thHtml = "";
+        //                            string partDescription4thHtml = "";
 
-                                    if (partDescription4thCell != null)
-                                    {
-                                        var clone = partDescription4thCell.Clone();
+        //                            if (partDescription4thCell != null)
+        //                            {
+        //                                var clone = partDescription4thCell.Clone();
 
-                                        // Remove hyperlinks but keep their text
-                                        foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
-                                        {
-                                            link.ParentNode.ReplaceChild(
-                                                HtmlTextNode.CreateNode(link.InnerText),
-                                                link
-                                            );
-                                        }
+        //                                // Remove hyperlinks but keep their text
+        //                                foreach (var link in clone.SelectNodes(".//a") ?? Enumerable.Empty<HtmlNode>())
+        //                                {
+        //                                    link.ParentNode.ReplaceChild(
+        //                                        HtmlTextNode.CreateNode(link.InnerText),
+        //                                        link
+        //                                    );
+        //                                }
 
-                                        // ✅ PUT IT HERE (before InnerHtml extraction)
-                                        var indentureNode = clone.SelectSingleNode(".//span[contains(@class,'indenturePartCell')]");
-                                        if (indentureNode != null)
-                                        {
-                                            indentureNode.Remove();
-                                        }
+        //                                // ✅ PUT IT HERE (before InnerHtml extraction)
+        //                                var indentureNode = clone.SelectSingleNode(".//span[contains(@class,'indenturePartCell')]");
+        //                                if (indentureNode != null)
+        //                                {
+        //                                    indentureNode.Remove();
+        //                                }
 
-                                        partDescription4thHtml = HtmlEntity.DeEntitize(clone.InnerHtml)
-                                                                    .Replace("&nbsp;", " ")
-                                                                    .Replace("\u00A0", " ")
-                                                                    .Replace("Â", " ");
-                                    }
+        //                                partDescription4thHtml = HtmlEntity.DeEntitize(clone.InnerHtml)
+        //                                                            .Replace("&nbsp;", " ")
+        //                                                            .Replace("\u00A0", " ")
+        //                                                            .Replace("Â", " ");
+        //                            }
 
-                                    Console.WriteLine("MATCH FOUND: " + itemNumberSelected);
-                                    Console.WriteLine("SECOND COLUMN: " + partNumber3rdCellText);
+        //                            Console.WriteLine("MATCH FOUND: " + itemNumberSelected);
+        //                            Console.WriteLine("SECOND COLUMN: " + partNumber3rdCellText);
 
-                                    var eapd = new EAPD();
-                                    eapd.ATACode = "";
-                                    eapd.PartNumber = partNumber3rdCellText;
-                                    eapd.ItemNumber = itemNumberSelected;
-                                    eapd.PartDescription = partDescription4thHtml;
-                                    matchedPartNumbers.Add(eapd);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                return matchedPartNumbers;
-            }
-            return matchedPartNumbers;
-        }
+        //                            var eapd = new EAPD();
+        //                            eapd.ATACode = "";
+        //                            eapd.PartNumber = partNumber3rdCellText;
+        //                            eapd.ItemNumber = itemNumberSelected;
+        //                            eapd.PartDescription = partDescription4thHtml;
+        //                            matchedPartNumbers.Add(eapd);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return matchedPartNumbers;
+        //    }
+        //    return matchedPartNumbers;
+        //}
 
         private async Task<List<EAPD>> FindPartNumbersByNameAsync(string pageUrl, string itemName)
         {
@@ -465,7 +474,7 @@ namespace ChromeExtItemATAPartNumber.Controllers
             return matchedPartNumbers;
         }
 
-        public async Task<List<string>> FindDMCStringsAsync(string url)
+        public async Task<List<DMCT>> FindDMCStringsAsync(string url)
         {
             HttpClient client = new HttpClient();
             string html = await client.GetStringAsync(url);
@@ -477,17 +486,18 @@ namespace ChromeExtItemATAPartNumber.Controllers
             // Find all nodes having data-dmc attribute
             var nodes = doc.DocumentNode.SelectNodes("//*[@data-dmc]");
 
-            List<string> dmcList = new List<string>();
+            var dmcList = new List<DMCT>();
 
             if (nodes != null)
             {
                 foreach (var node in nodes)
                 {
                     string dmc = node.GetAttributeValue("data-dmc", "");
+                    string dmcTitle = node.GetAttributeValue("data-commontitle", "");
 
                     if (!string.IsNullOrWhiteSpace(dmc))
                     {
-                        dmcList.Add(dmc);
+                        dmcList.Add(new DMCT { DMC = dmc, DMCTitle = dmcTitle });
                     }
                 }
             }
@@ -502,15 +512,15 @@ namespace ChromeExtItemATAPartNumber.Controllers
             return dmcList;
         }
 
-        public async Task<string> GetSubDMCAsync(string DMC)
-        {
-            //// Example: PW1100G-C-74-00-00-01A-421A-D
-            //// Needed: C-74-00-00
-            ///
-            var parts = DMC.Split('-');
+        //public async Task<string> GetSubDMCAsync(string DMC)
+        //{
+        //    //// Example: PW1100G-C-74-00-00-01A-421A-D
+        //    //// Needed: C-74-00-00
+        //    ///
+        //    var parts = DMC.Split('-');
 
-            // C + first 3 numeric blocks
-            return $"{parts[1]}-{parts[2]}-{parts[3]}-{parts[4]}";
-        }
+        //    // C + first 3 numeric blocks
+        //    return $"{parts[1]}-{parts[2]}-{parts[3]}-{parts[4]}";
+        //}
     }
 }
