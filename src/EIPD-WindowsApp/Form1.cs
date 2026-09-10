@@ -33,7 +33,7 @@ namespace EIPD_WindowsApp
 
             var eipdLink = txtEIPDLink.Text;
 
-            var columnNames = new List<string>() { "SERIES", "Page", "DMC", "Title", "EIPD_Match", "EIPD_MatchTitle", "Attempt" };
+            var columnNames = new List<string>() { "SERIES", "DMC", "Title", "EIPD_Match", "EIPD_MatchTitle", "Attempt" };
 
             var excelInstance = ExcelUtility.CreateExcelWithColumns("D:\\test1213456.xlsx", columnNames, "Test");
 

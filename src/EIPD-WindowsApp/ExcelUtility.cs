@@ -58,9 +58,12 @@ public static class ExcelUtility
                 colIndex++;
             }
 
-            worksheet.Column(1).Width = 35;
-            worksheet.Column(2).Width = 70;
-            worksheet.Column(3).Width = 100;
+            worksheet.Column(1).Width = 40;
+            worksheet.Column(2).Width = 35;
+            worksheet.Column(3).Width = 35;
+            worksheet.Column(4).Width = 35;
+            worksheet.Column(5).Width = 35;
+            worksheet.Column(6).Width = 35;
 
 
             // Header formatting
@@ -119,21 +122,21 @@ public static class ExcelUtility
         foreach (var caution in lstCautions)
         {
             worksheet.Cells[excelRow, 1].Value = caution.Series;
-            worksheet.Cells[excelRow, 2].Value = caution.DMC;
+            //worksheet.Cells[excelRow, 2].Value = caution.DMC;
             worksheet.Cells[excelRow, 2].Hyperlink = new Uri(caution.DMCLink);
-            worksheet.Cells[excelRow, 3].Value = caution.DMC.Split('.')[0];
-            worksheet.Cells[excelRow, 4].Value = caution.Title;
-            worksheet.Cells[excelRow, 5].Value = caution.EIPDMatch;
+            worksheet.Cells[excelRow, 2].Value = caution.DMC.Split('.')[0];
+            worksheet.Cells[excelRow, 3].Value = caution.Title;
+            worksheet.Cells[excelRow, 4].Value = caution.EIPDMatch;
 
             if (caution.EIPDMatchLink != null) 
             {
-                worksheet.Cells[excelRow, 5].Hyperlink = new Uri(caution.EIPDMatchLink);
+                worksheet.Cells[excelRow, 4].Hyperlink = new Uri(caution.EIPDMatchLink);
             }
             
-            worksheet.Cells[excelRow, 6].Value = caution.EIPDMatchTitle;
-            worksheet.Cells[excelRow, 7].Value = caution.attempt;
-            worksheet.Cells[excelRow, 4].Style.WrapText = true;
-            worksheet.Cells[excelRow, 6].Style.WrapText = true;
+            worksheet.Cells[excelRow, 5].Value = caution.EIPDMatchTitle;
+            worksheet.Cells[excelRow, 6].Value = caution.attempt;
+            worksheet.Cells[excelRow, 3].Style.WrapText = true;
+            worksheet.Cells[excelRow, 5].Style.WrapText = true;
 
 
             // Format row
