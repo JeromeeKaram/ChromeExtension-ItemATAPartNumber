@@ -25,82 +25,87 @@ namespace EIPD_WindowsApp
 
         private async void btnRun_Click(object sender, EventArgs e)
         {
-            var fileNamesEms = new List<Test>();
-            //var fileNamesEipds = new List<string>();
-
-            var engineManualLink = txtEngineManual.Text;
-
-
-            var eipdLink = txtEIPDLink.Text;
-
-            var columnNames = new List<string>() { "SERIES", "DMC", "Title", "EIPD_Match", "EIPD_MatchTitle", "Attempt" };
-
-            var excelInstance = ExcelUtility.CreateExcelWithColumns("D:\\test1213456.xlsx", columnNames, "Test");
-
-            var lstmodsEM = extract_task(engineManualLink);
-
-            var eipdDMCs = await FindDMCStringsAsync(txtEIPDLink.Text);
-
-            foreach (ModuleInfo mod in lstmodsEM)
+            try
             {
-                foreach (TaskInfo task in mod.m_lstTasks)
+
+                progressBar1.Style = ProgressBarStyle.Marquee;
+                progressBar1.MarqueeAnimationSpeed = 30;
+                progressBar1.Visible = true;
+
+                var fileNamesEms = new List<Test>();
+
+                var engineManualLink = txtEngineManual.Text;
+                var eipdLink = txtEIPDLink.Text;
+
+                await Task.Run(async () =>
                 {
-                    //fileNamesEms.Add(task.m_sHtmlLink);
-                    var engineManualItem = new Test();
-                    engineManualItem.Series = mod.m_sTitle;
-                    var pageHeader = GetEngineManualPageTitle(txtEngineManual.Text, task.m_sHtmlLink);
-                    task.m_sTitle = pageHeader;
-                    engineManualItem.Title = pageHeader;
-                    engineManualItem.DMC = task.m_sHtmlLink;
-                    engineManualItem.DMCLink = CreateLink(txtEngineManual.Text, task.m_sHtmlLink);
-                    fileNamesEms.Add(engineManualItem);
-                }
-            }
 
-            foreach (var fileNamesEm in fileNamesEms)
-            {
-                var emDMCPage = fileNamesEm.DMC;
-                var emDMC = fileNamesEm.DMC.Split('.')[0];
-                var emDMCTitle = fileNamesEm.Title;
+                    var columnNames = new List<string>() { "SERIES", "DMC", "Title", "EIPD_Match", "EIPD_MatchTitle", "Attempt" };
 
-                //if (emDMC != "PW1100G-A-00-00-00-00A-003A-B") continue;
+                    var excelInstance = ExcelUtility.CreateExcelWithColumns("D:\\test1213456.xlsx", columnNames, "Test");
 
-                var dmcVariants = GetDMCVariants(emDMC);
-                var (DMCT, attempt) = FindValidEIPDMatch(emDMC, dmcVariants, emDMCTitle, eipdDMCs);
+                    var lstmodsEM = extract_task(engineManualLink);
 
-                if (DMCT != null)
+                    var eipdDMCs = await FindDMCStringsAsync(txtEIPDLink.Text);
+
+                    foreach (ModuleInfo mod in lstmodsEM)
+                    {
+                        foreach (TaskInfo task in mod.m_lstTasks)
+                        {
+                            //fileNamesEms.Add(task.m_sHtmlLink);
+                            var engineManualItem = new Test();
+                            engineManualItem.Series = mod.m_sTitle;
+                            var pageHeader = GetEngineManualPageTitle(txtEngineManual.Text, task.m_sHtmlLink);
+                            task.m_sTitle = pageHeader;
+                            engineManualItem.Title = pageHeader;
+                            engineManualItem.DMC = task.m_sHtmlLink;
+                            engineManualItem.DMCLink = CreateLink(txtEngineManual.Text, task.m_sHtmlLink);
+                            fileNamesEms.Add(engineManualItem);
+                        }
+                    }
+
+                    foreach (var fileNamesEm in fileNamesEms)
+                    {
+                        var emDMCPage = fileNamesEm.DMC;
+                        var emDMC = fileNamesEm.DMC.Split('.')[0];
+                        var emDMCTitle = fileNamesEm.Title;
+
+                        //if (emDMC != "PW1100G-A-00-00-00-00A-003A-B") continue;
+
+                        var dmcVariants = GetDMCVariants(emDMC);
+                        var (DMCT, attempt) = FindValidEIPDMatch(emDMC, dmcVariants, emDMCTitle, eipdDMCs);
+
+                        if (DMCT != null)
+                        {
+                            fileNamesEm.EIPDMatch = DMCT.DMC;
+                            fileNamesEm.EIPDMatchLink = CreateLink(txtEIPDLink.Text, DMCT?.DMC);
+                            fileNamesEm.EIPDMatchTitle = DMCT.DMCTitle;
+                            fileNamesEm.attempt = attempt;
+                        }
+                    }
+
+                    ExcelUtility.SVCWriteOldSheet_EPPlus1(excelInstance, fileNamesEms, "Test");
+                    excelInstance.Save();
+
+                });
+
+                MessageBox.Show("Finished Processing");
+
+                // Open the Excel file
+                Process.Start(new ProcessStartInfo("D:\\test1213456.xlsx")
                 {
-                    fileNamesEm.EIPDMatch = DMCT.DMC;
-                    fileNamesEm.EIPDMatchLink = CreateLink(txtEIPDLink.Text, DMCT?.DMC);
-                    fileNamesEm.EIPDMatchTitle = DMCT.DMCTitle;
-                    fileNamesEm.attempt = attempt;
-                }
+                    UseShellExecute = true
+                });
             }
-
-            //var lstmodsEipds = extract_task(eipdLink);
-
-            //foreach (ModuleInfo mod in lstmodsEipds)
-            //{
-            //    foreach (TaskInfo task in mod.m_lstTasks)
-            //    {
-            //        //fileNamesEipds.Add(task.m_sHtmlLink);
-            //        var pageHeader = GetEngineManualPageTitle(txtEngineManual.Text, task.m_sHtmlLink);
-            //        task.m_sTitle= pageHeader;
-            //    }
-            //}
-
-
-
-            ExcelUtility.SVCWriteOldSheet_EPPlus1(excelInstance, fileNamesEms, "Test");
-            excelInstance.Save();
-
-            MessageBox.Show("Finished Processing");
-
-            // Open the Excel file
-            Process.Start(new ProcessStartInfo("D:\\test1213456.xlsx")
+            catch (Exception ex)
             {
-                UseShellExecute = true
-            });
+                MessageBox.Show(ex.ToString(), "Error",
+        MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                progressBar1.Visible = false;
+            }
         }
 
         private string CreateLink(string link, string page)
