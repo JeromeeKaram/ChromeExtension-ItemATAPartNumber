@@ -26,6 +26,8 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Chrome Extension", "..\Chro
 		SlnRelativePath = "..\Chrome Extension\"
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EIPD-WindowsApp", "..\EIPD-WindowsApp\EIPD-WindowsApp.csproj", "{017CF349-3381-4767-AEE9-6029E673985E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,6 +42,10 @@ Global
 		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{5DA4BD9A-3B00-1392-0F08-00E905ED94E7}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{017CF349-3381-4767-AEE9-6029E673985E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{017CF349-3381-4767-AEE9-6029E673985E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{017CF349-3381-4767-AEE9-6029E673985E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{017CF349-3381-4767-AEE9-6029E673985E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

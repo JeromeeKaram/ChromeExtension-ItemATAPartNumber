@@ -1,0 +1,17 @@
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\EIPD-WindowsApp.exe.config
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\EIPD-WindowsApp.exe
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\EIPD-WindowsApp.pdb
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-WindowsApp.csproj.AssemblyReference.cache
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD_WindowsApp.Form1.resources
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD_WindowsApp.Properties.Resources.resources
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-WindowsApp.csproj.GenerateResource.cache
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-WindowsApp.csproj.CoreCompileInputs.cache
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-WindowsApp.exe
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-WindowsApp.pdb
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-WindowsApp.exe.config
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\EPPlus.dll
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\EPPlus.xml
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\obj\Debug\EIPD-Win.751F7FEF.Up2Date
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\HtmlAgilityPack.dll
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\HtmlAgilityPack.pdb
+D:\ChromeExtension ItemATAPartNumber\src\EIPD-WindowsApp\bin\Debug\HtmlAgilityPack.xml
