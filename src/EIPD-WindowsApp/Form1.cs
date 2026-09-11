@@ -70,7 +70,7 @@ namespace EIPD_WindowsApp
                         var emDMC = fileNamesEm.DMC.Split('.')[0];
                         var emDMCTitle = fileNamesEm.Title;
 
-                        //if (emDMC != "PW1100G-A-00-00-00-00A-003A-B") continue;
+                        //if (emDMC != "PW1100G-B-73-11-03-03A-421A-D") continue;
 
                         var dmcVariants = GetDMCVariants(emDMC);
                         var (DMCT, attempt) = FindValidEIPDMatch(emDMC, dmcVariants, emDMCTitle, eipdDMCs);
@@ -133,7 +133,7 @@ namespace EIPD_WindowsApp
                 if (findAll.Count == 1)
                 {
                     //validEIPDMatch = findAll[0].DMC;
-                    return (findAll[0], $"attempt-{attempt}||{variant}||items-{1}");
+                    return (findAll[0], $"Attempt-{attempt}||{variant}||Records-{1}");
                 }
                 else
                 {
@@ -151,7 +151,14 @@ namespace EIPD_WindowsApp
                         .OrderByDescending(x => x.MatchCount)
                         .First();
 
-                    return (bestMatch.Item, $"attempt-{attempt}||{variant}||items-{findAll.Count}");
+                    if (bestMatch.MatchCount > 0)
+                    {
+                        return (bestMatch.Item, $"Attempt-{attempt}||{variant}||Records-{findAll.Count}||WordsMatch-{bestMatch.MatchCount}");
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
             }
             return (null, "-1");
