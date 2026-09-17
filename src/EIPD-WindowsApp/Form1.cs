@@ -40,7 +40,7 @@ namespace EIPD_WindowsApp
                 await Task.Run(async () =>
                 {
 
-                    var columnNames = new List<string>() { "SERIES", "DMC", "Title", "EIPD_Match", "EIPD_MatchTitle", "Attempt" };
+                    var columnNames = new List<string>() { "SERIES", "DMC", "Title", "EIPD_Match", "EIPD_MatchTitle", "Attempt", "PartOfDMC", "Records", "WordsMatched" };
 
                     var excelInstance = ExcelUtility.CreateExcelWithColumns("D:\\test1213456.xlsx", columnNames, "Test");
 
@@ -80,7 +80,13 @@ namespace EIPD_WindowsApp
                             fileNamesEm.EIPDMatch = DMCT.DMC;
                             fileNamesEm.EIPDMatchLink = CreateLink(txtEIPDLink.Text, DMCT?.DMC);
                             fileNamesEm.EIPDMatchTitle = DMCT.DMCTitle;
-                            fileNamesEm.attempt = attempt;
+
+                            var parts = attempt.Split('|');
+
+                            fileNamesEm.Attempt = parts[0];
+                            fileNamesEm.PartOfDMC = parts[1];
+                            fileNamesEm.Records = parts[2];
+                            fileNamesEm.WordsMatch = parts[3];
                         }
                     }
 
@@ -133,7 +139,7 @@ namespace EIPD_WindowsApp
                 if (findAll.Count == 1)
                 {
                     //validEIPDMatch = findAll[0].DMC;
-                    return (findAll[0], $"Attempt-{attempt}||{variant}||Records-{1}");
+                    return (findAll[0], $"{attempt}|{variant}|1|0");
                 }
                 else
                 {
@@ -153,7 +159,7 @@ namespace EIPD_WindowsApp
 
                     if (bestMatch.MatchCount > 0)
                     {
-                        return (bestMatch.Item, $"Attempt-{attempt}||{variant}||Records-{findAll.Count}||WordsMatch-{bestMatch.MatchCount}");
+                        return (bestMatch.Item, $"{attempt}|{variant}|{findAll.Count}|{bestMatch.MatchCount}");
                     }
                     else
                     {

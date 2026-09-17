@@ -10,7 +10,10 @@ public class Test
     public string EIPDMatch;
     public string EIPDMatchLink;
     public string EIPDMatchTitle;
-    public string attempt;
+    public string Attempt;
+    public string PartOfDMC { get; set; }
+    public string Records { get; set; }
+    public string WordsMatch { get; set; }
 }
 
 

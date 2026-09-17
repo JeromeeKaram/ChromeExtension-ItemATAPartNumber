@@ -128,13 +128,16 @@ public static class ExcelUtility
             worksheet.Cells[excelRow, 3].Value = caution.Title;
             worksheet.Cells[excelRow, 4].Value = caution.EIPDMatch;
 
-            if (caution.EIPDMatchLink != null) 
+            if (caution.EIPDMatchLink != null)
             {
                 worksheet.Cells[excelRow, 4].Hyperlink = new Uri(caution.EIPDMatchLink);
             }
-            
+
             worksheet.Cells[excelRow, 5].Value = caution.EIPDMatchTitle;
-            worksheet.Cells[excelRow, 6].Value = caution.attempt;
+            worksheet.Cells[excelRow, 6].Value = caution.Attempt;
+            worksheet.Cells[excelRow, 7].Value = caution.PartOfDMC;
+            worksheet.Cells[excelRow, 8].Value = caution.Records;
+            worksheet.Cells[excelRow, 9].Value = caution.WordsMatch;
             worksheet.Cells[excelRow, 3].Style.WrapText = true;
             worksheet.Cells[excelRow, 5].Style.WrapText = true;
 
